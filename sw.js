@@ -1,5 +1,5 @@
 // Offline cache for the Rolled 90 calculator. Bump VERSION when files change.
-const VERSION = "rolled90-v2";
+const VERSION = "rolled90-v3";
 const FILES = ["./", "index.html", "manifest.webmanifest", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "logo.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
