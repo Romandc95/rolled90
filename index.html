@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rolled 90">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1d1f22">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>Rolled 90 & Cut-Down Elbow Calculator</title>
+<style>
+:root{
+  --bg:#f3f1ec; --card:#ffffff; --ink:#1d1f22; --muted:#62676e; --line:#d9d6cf;
+  --accent:#c2410c; --accent-ink:#ffffff; --a90:#2563eb; --corr:#c2410c; --outlet:#64748b;
+  --good:#15803d; --warn:#b45309; --bad:#b91c1c; --hero:#1d1f22; --hero-ink:#ffffff;
+  --field:#faf9f6; --halo:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121417; --card:#1b1e22; --ink:#eceae5; --muted:#9aa0a8; --line:#30343a;
+    --accent:#f97316; --accent-ink:#121417; --a90:#60a5fa; --corr:#fb923c; --outlet:#94a3b8;
+    --good:#4ade80; --warn:#fbbf24; --bad:#f87171; --hero:#26292e; --hero-ink:#ffffff;
+    --field:#15171a; --halo:#1b1e22;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  padding:env(safe-area-inset-top) 0 calc(24px + env(safe-area-inset-bottom));}
+main{max-width:640px;margin:0 auto;padding:0 12px}
+header{padding:18px 4px 8px}
+h1{font-size:21px;line-height:1.2;margin:0}
+header p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+.card h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.seg{display:flex;background:var(--field);border:1px solid var(--line);border-radius:11px;padding:3px;gap:3px}
+.seg button{flex:1;min-height:44px;border:0;border-radius:8px;background:transparent;color:var(--ink);
+  font:inherit;font-weight:600;font-size:15px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.row.one{grid-template-columns:1fr}
+label{display:block;font-size:13px;color:var(--muted);font-weight:600;margin-bottom:4px}
+input[type=text],select{width:100%;min-height:48px;font-size:20px;font-weight:600;color:var(--ink);
+  background:var(--field);border:1px solid var(--line);border-radius:10px;padding:8px 12px;
+  font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none}
+select{font-size:18px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 21px,calc(100% - 13px) 21px;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+input:disabled{opacity:.55}
+.big-input input{font-size:30px;min-height:60px}
+.unit{font-weight:500;color:var(--muted)}
+.check{display:flex;align-items:center;gap:10px;min-height:44px;margin-top:8px;font-size:15px;font-weight:600;color:var(--ink)}
+.check input{width:22px;height:22px;accent-color:var(--accent)}
+.hint{font-size:13px;color:var(--muted);margin:6px 0 0}
+.hero{background:var(--hero);color:var(--hero-ink);border:0}
+.hero h2{color:#b8bcc2}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hero .k{font-size:13px;color:#c9ccd1;font-weight:600}
+.hero .v{font-size:36px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.hero .s{font-size:13px;color:#b8bcc2;font-variant-numeric:tabular-nums}
+.hero .note{margin-top:10px;font-size:14px;color:#e2e4e7}
+.msg{border-radius:10px;padding:10px 12px;font-size:14px;margin-top:10px}
+.msg.bad{background:color-mix(in srgb,var(--bad) 18%,transparent);color:#fecaca;border:1px solid var(--bad)}
+.msg.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);border:1px solid var(--warn)}
+.card .msg.warn{color:var(--ink)}
+.hero .msg.warn{color:#fde68a}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.res div{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px}
+.res .k{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.res .v{font-size:22px;font-weight:750;font-variant-numeric:tabular-nums;line-height:1.2}
+.res .s{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.res .wide{grid-column:1/-1}
+.marks .v{color:var(--corr)}
+svg{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:14px;height:6px;border-radius:3px;margin-right:5px;vertical-align:middle}
+ol.steps{margin:0;padding-left:22px;font-size:14.5px}
+ol.steps li{margin:0 0 10px}
+ol.steps code{font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--field);border:1px solid var(--line);
+  border-radius:6px;padding:1px 5px;display:inline-block;margin-top:3px;white-space:normal;word-break:break-word}
+details summary{cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center}
+.tbl-wrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:8px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{position:sticky;top:0;background:var(--card);font-size:12px;color:var(--muted);text-transform:uppercase}
+th:first-child,td:first-child{text-align:center}
+tr.hl td{background:color-mix(in srgb,var(--accent) 22%,transparent);font-weight:700}
+.ok{color:var(--good);font-weight:700}
+footer{color:var(--muted);font-size:12.5px;padding:4px 6px 0}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Rolled 90 &amp; Cut-Down Elbow Calculator</h1>
+  <p>Full 90 rolled down, welded direct to a cut-down elbow that returns the outlet to level.</p>
+</header>
+
+<section class="card">
+  <div class="seg" id="modeSeg">
+    <button data-v="angle">Find angle</button>
+    <button data-v="drop">Find drop</button>
+  </div>
+  <div class="row one big-input" id="dropRow">
+    <div><label for="dropIn">Desired drop <span class="unit u-len"></span></label>
+    <input type="text" id="dropIn" inputmode="decimal" autocomplete="off"></div>
+  </div>
+  <div class="row one big-input hidden" id="angRow">
+    <div><label for="angIn">Roll / cut angle θ <span class="unit">(1°–90°)</span></label>
+    <input type="text" id="angIn" inputmode="decimal" autocomplete="off"></div>
+  </div>
+</section>
+
+<section class="card hero" aria-live="polite">
+  <h2>Set-up angles</h2>
+  <div class="hero-grid">
+    <div><div class="k">Roll full 90 down</div><div class="v" id="hRoll">—</div><div class="s" id="hRollDms"></div></div>
+    <div><div class="k">Keep on cut-down elbow</div><div class="v" id="hCut">—</div><div class="s" id="hCutDms"></div></div>
+  </div>
+  <div class="note" id="hNote"></div>
+  <div id="hMsg"></div>
+</section>
+
+<section class="card">
+  <h2>Centerline results</h2>
+  <div class="res">
+    <div><div class="k">Drop D</div><div class="v" id="rD">—</div><div class="s" id="rDs"></div></div>
+    <div><div class="k">Cut elbow takeoff t</div><div class="v" id="rT">—</div><div class="s" id="rTs"></div></div>
+    <div><div class="k">Travel L</div><div class="v" id="rL">—</div><div class="s" id="rLs"></div></div>
+    <div><div class="k">Horiz. projection</div><div class="v" id="rH">—</div><div class="s" id="rHs"></div></div>
+    <div class="wide"><div class="k">Full 90 takeoff A (+ gap g)</div><div class="v" id="rA">—</div><div class="s" id="rAs"></div></div>
+  </div>
+  <p class="hint">Takeoffs and travel are straight-line centerline dimensions between theoretical intersection points — not cut marks.</p>
+</section>
+
+<section class="card">
+  <h2>Cut-down elbow marking (arc lengths)</h2>
+  <div class="res marks">
+    <div><div class="k">Throat (inside) arc</div><div class="v" id="mIn">—</div><div class="s" id="mIns"></div></div>
+    <div><div class="k">Heel (outside) arc</div><div class="v" id="mOut">—</div><div class="s" id="mOuts"></div></div>
+    <div class="wide"><div class="k">Centerline / side arc</div><div class="v" id="mCl">—</div><div class="s" id="mCls"></div></div>
+    <div><div class="k">Inside radius</div><div class="v" id="mRi" style="color:inherit">—</div><div class="s" id="mRis"></div></div>
+    <div><div class="k">Outside radius</div><div class="v" id="mRo" style="color:inherit">—</div><div class="s" id="mRos"></div></div>
+  </div>
+  <p class="hint" id="markNote">Measure each arc along the curved surface of the elbow, starting at the face you are keeping. Connect the throat, side and heel marks around the pipe for the cut line.</p>
+  <div id="markMsg"></div>
+</section>
+
+<section class="card">
+  <h2>Pipe &amp; fittings</h2>
+  <div class="row">
+    <div><label>Units</label><div class="seg" id="unitSeg"><button data-v="in">in</button><button data-v="mm">mm</button></div></div>
+    <div id="fmtBox"><label>Show inches as</label>
+      <select id="fmtSel"><option value="dec">Decimal</option><option value="16">Nearest 1/16″</option><option value="32">Nearest 1/32″</option></select></div>
+  </div>
+  <div class="row">
+    <div><label for="npsSel">NPS</label><select id="npsSel"></select></div>
+    <div><label for="odIn">Pipe OD <span class="unit u-len"></span></label><input type="text" id="odIn" inputmode="decimal" autocomplete="off"></div>
+  </div>
+  <div class="row one">
+    <div><label>Elbow radius</label>
+      <div class="seg" id="radSeg"><button data-v="LR">Long (1.5D)</button><button data-v="SR">Short (1D)</button><button data-v="C">Custom</button></div></div>
+  </div>
+  <label class="check"><input type="checkbox" id="sameChk"> Same radius for both fittings</label>
+  <div class="row">
+    <div><label for="aIn">Full 90 radius A <span class="unit u-len"></span></label><input type="text" id="aIn" inputmode="decimal" autocomplete="off"></div>
+    <div><label for="bIn">Cut elbow radius B <span class="unit u-len"></span></label><input type="text" id="bIn" inputmode="decimal" autocomplete="off"></div>
+  </div>
+  <div class="row one">
+    <div><label for="gIn">Weld root gap g (axial) <span class="unit u-len"></span></label><input type="text" id="gIn" inputmode="decimal" autocomplete="off"></div>
+  </div>
+  <p class="hint">Radii default to nominal 1.5 × NPS (long) or 1 × NPS (short). Type measured values to override — the radius switches to Custom.</p>
+</section>
+
+<section class="card">
+  <h2>Diagram</h2>
+  <div id="diagram"></div>
+  <div class="legend">
+    <span><b style="color:var(--a90)">①</b> Rolled full 90 (A)</span>
+    <span><b>②</b> Direct weld (gap g)</span>
+    <span><b style="color:var(--corr)">③</b> Correction elbow (B, θ)</span>
+    <span><b style="color:var(--outlet)">④</b> Level outlet</span>
+  </div>
+  <p class="hint">View looking along the inlet (inlet shown end-on). Dashed lines are centerlines through the theoretical intersection points PI₁ and PI₂.</p>
+</section>
+
+<section class="card">
+  <h2>Step-by-step</h2>
+  <ol class="steps" id="steps"></ol>
+</section>
+
+<section class="card">
+  <details id="tblDetails">
+    <summary>Lookup table: 1°–90°</summary>
+    <p class="hint">Current A, B and g. Highlighted row is nearest the current angle.</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>θ°</th><th>Drop</th><th>Takeoff t</th><th>Travel L</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+  </details>
+</section>
+
+<footer>Works offline. Inputs are remembered on this device. Full precision is kept internally; only the display is rounded. Verify against your fittings before cutting.</footer>
+</main>
+
+<script>
+"use strict";
+/* ---------- data ---------- */
+// NPS label, nominal size (in), OD (in) per ASME B36.10
+const NPS = [
+  ["½″",0.5,0.840],["¾″",0.75,1.050],["1″",1,1.315],["1¼″",1.25,1.660],["1½″",1.5,1.900],
+  ["2″",2,2.375],["2½″",2.5,2.875],["3″",3,3.500],["3½″",3.5,4.000],["4″",4,4.500],
+  ["5″",5,5.563],["6″",6,6.625],["8″",8,8.625],["10″",10,10.750],["12″",12,12.750],
+  ["14″",14,14.000],["16″",16,16.000],["18″",18,18.000],["20″",20,20.000],["22″",22,22.000],["24″",24,24.000]
+];
+const MM = 25.4, D2R = Math.PI/180;
+
+/* ---------- core geometry (all lengths in inches) ---------- */
+function geom(A,B,g,deg){
+  const r = deg*D2R;
+  const t = B*Math.tan(r/2);
+  const L = A + t + g;
+  return {deg, rad:r, t, L, D:L*Math.sin(r), H:L*Math.cos(r)};
+}
+function solveAngle(A,B,g,D){
+  const dmin = geom(A,B,g,1).D, dmax = geom(A,B,g,90).D;
+  if (D < dmin) return {err:"low", dmin, dmax};
+  if (D > dmax) return {err:"high", dmin, dmax};
+  // f(θ) = [A + B tan(θ/2) + g] sin θ is strictly increasing on [1°, 90°]
+  let lo = 1, hi = 90, it = 0;
+  while (hi - lo > 1e-12 && it < 200){
+    const m = (lo+hi)/2;
+    if (geom(A,B,g,m).D < D) lo = m; else hi = m;
+    it++;
+  }
+  return {deg:(lo+hi)/2, it, dmin, dmax};
+}
+function shortcut(R,D){ // A = B = R, g = 0
+  const x = (R-D)/(R*Math.SQRT2);
+  if (x < -1 || x > 1) return NaN;
+  return 45 - Math.asin(x)/D2R;
+}
+function arcs(B,OD,deg){
+  const r = deg*D2R, ri = B-OD/2, ro = B+OD/2;
+  return {ri, ro, inner:ri*r, center:B*r, outer:ro*r};
+}
+
+/* ---------- state ---------- */
+const DEF = {mode:"angle", unit:"in", fmt:"dec", nps:9, od:4.5, rtype:"LR", same:true, A:6, B:6, g:0, drop:2, ang:16.87};
+let S = Object.assign({}, DEF);
+try { const s = JSON.parse(localStorage.getItem("rolled90.v1")||"null"); if (s && typeof s==="object") S = Object.assign(S, s); } catch(e){}
+function save(){ try { localStorage.setItem("rolled90.v1", JSON.stringify(S)); } catch(e){} }
+
+/* ---------- formatting ---------- */
+const $ = id => document.getElementById(id);
+function frac(v,den){
+  const sg = v<0?"−":""; v=Math.abs(v);
+  const n = Math.round(v*den); const w = Math.floor(n/den); let r = n - w*den, d = den;
+  if (!r) return sg+w+"″";
+  while (r%2===0){ r/=2; d/=2; }
+  return sg+(w? w+" ":"")+r+"/"+d+"″";
+}
+function fmt(v){ // primary display
+  if (!isFinite(v)) return "—";
+  if (S.unit==="mm") return (v*MM).toFixed(2)+" mm";
+  if (S.fmt==="dec") return v.toFixed(4)+"″";
+  return frac(v, +S.fmt);
+}
+function fmtSub(v){ // secondary display
+  if (!isFinite(v)) return "";
+  if (S.unit==="mm") return v.toFixed(4)+"″";
+  if (S.fmt==="dec") return (v*MM).toFixed(2)+" mm";
+  return v.toFixed(4)+"″ · "+(v*MM).toFixed(2)+" mm";
+}
+function fmtPlain(v){ return S.unit==="mm" ? (v*MM).toFixed(3)+" mm" : v.toFixed(6)+"″"; }
+function fmtTbl(v){ return S.unit==="mm" ? (v*MM).toFixed(1) : (S.fmt==="dec" ? v.toFixed(3) : frac(v,+S.fmt).replace("″","")); }
+function dms(deg){
+  let d = Math.floor(deg), mf = (deg-d)*60, m = Math.floor(mf), s = Math.round((mf-m)*60);
+  if (s===60){ s=0; m++; } if (m===60){ m=0; d++; }
+  return d+"° "+m+"′ "+s+"″";
+}
+function toInput(v){ // inches -> input text in current unit
+  if (!isFinite(v)) return "";
+  const x = S.unit==="mm" ? v*MM : v;
+  return String(+x.toFixed(S.unit==="mm"?3:4));
+}
+function parseLen(str){ // returns inches or NaN; accepts 6.5, 6 1/2, 6-1/2, 1/2
+  str = String(str).trim().replace(/[″"]/g,"").replace(",",".");
+  if (!str) return NaN;
+  let m, x;
+  if ((m = str.match(/^(\d+(?:\.\d+)?)[\s-]+(\d+)\/(\d+)$/))) x = +m[1] + m[2]/m[3];
+  else if ((m = str.match(/^(\d+)\/(\d+)$/))) x = m[1]/m[2];
+  else if (/^\d*\.?\d+$|^\d+\.$/.test(str)) x = parseFloat(str);
+  else return NaN;
+  return S.unit==="mm" ? x/MM : x;
+}
+
+/* ---------- UI wiring ---------- */
+const npsSel = $("npsSel");
+NPS.forEach((n,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent="NPS "+n[0]+"  (OD "+n[2].toFixed(3)+"″)"; npsSel.appendChild(o); });
+const custom = document.createElement("option"); custom.value="-1"; custom.textContent="Custom OD"; npsSel.appendChild(custom);
+
+function segInit(id,key,onchange){
+  const el = $(id);
+  el.addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    S[key] = b.dataset.v; onchange && onchange(); syncUI(); calc();
+  });
+}
+function segSync(id,val){ $(id).querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.v===val)); }
+
+function applyRadiusType(){
+  if (S.nps < 0 || S.rtype==="C") return;
+  const k = S.rtype==="LR" ? 1.5 : 1;
+  S.A = S.B = k*NPS[S.nps][1];
+}
+segInit("modeSeg","mode");
+segInit("unitSeg","unit");
+segInit("radSeg","rtype",()=>{ applyRadiusType(); if (S.rtype!=="C"){ S.same = true; } });
+
+$("fmtSel").addEventListener("change", e=>{ S.fmt=e.target.value; calc(); });
+npsSel.addEventListener("change", e=>{
+  S.nps = +e.target.value;
+  if (S.nps>=0){ S.od = NPS[S.nps][2]; applyRadiusType(); }
+  syncUI(); calc();
+});
+$("sameChk").addEventListener("change", e=>{ S.same = e.target.checked; if (S.same) S.B = S.A; syncUI(); calc(); });
+
+function lenInput(id,key,after){
+  $(id).addEventListener("input", e=>{
+    const v = parseLen(e.target.value);
+    S[key] = v;
+    after && after(v);
+    calc();
+  });
+}
+lenInput("odIn","od",()=>{ if (S.nps>=0 && Math.abs(S.od-NPS[S.nps][2])>1e-9){ S.nps=-1; npsSel.value="-1"; } });
+lenInput("aIn","A",v=>{ if (S.same){ S.B=v; $("bIn").value=$("aIn").value; } markCustom(); });
+lenInput("bIn","B",()=>markCustom());
+lenInput("gIn","g");
+lenInput("dropIn","drop");
+$("angIn").addEventListener("input", e=>{ const t=e.target.value.trim().replace(",","."); S.ang = /^\d*\.?\d+$|^\d+\.$/.test(t)?parseFloat(t):NaN; calc(); });
+function markCustom(){ if (S.rtype!=="C"){ S.rtype="C"; segSync("radSeg","C"); } }
+
+function syncUI(){
+  segSync("modeSeg",S.mode); segSync("unitSeg",S.unit); segSync("radSeg",S.rtype);
+  $("dropRow").classList.toggle("hidden", S.mode!=="angle");
+  $("angRow").classList.toggle("hidden", S.mode!=="drop");
+  $("fmtBox").style.visibility = S.unit==="in" ? "visible" : "hidden";
+  $("fmtSel").value = S.fmt;
+  npsSel.value = String(S.nps);
+  $("sameChk").checked = S.same;
+  $("bIn").disabled = S.same;
+  if (S.same) S.B = S.A;
+  document.querySelectorAll(".u-len").forEach(e=>e.textContent = "("+S.unit+")");
+  $("odIn").value = toInput(S.od); $("aIn").value = toInput(S.A); $("bIn").value = toInput(S.B);
+  $("gIn").value = toInput(S.g); $("dropIn").value = toInput(S.drop);
+  $("angIn").value = isFinite(S.ang) ? String(S.ang) : "";
+}
+
+/* ---------- calc + render ---------- */
+function set(id,v,sub){ $(id).textContent = fmt(v); $(id+"s").textContent = fmtSub(v); }
+function clearOut(){
+  ["hRoll","hCut"].forEach(i=>$(i).textContent="—"); $("hRollDms").textContent=$("hCutDms").textContent="";
+  ["rD","rT","rL","rH","rA","mIn","mOut","mCl","mRi","mRo"].forEach(i=>{ $(i).textContent="—"; $(i+"s").textContent=""; });
+  $("hNote").textContent=""; $("diagram").innerHTML=""; $("steps").innerHTML=""; $("markMsg").innerHTML="";
+}
+function msg(el,cls,html){ $(el).innerHTML = html ? '<div class="msg '+cls+'">'+html+'</div>' : ""; }
+
+function calc(){
+  save();
+  const {A,B,g,od} = S;
+  msg("hMsg");
+  const bad = [];
+  if (!(A>0)) bad.push("full 90 radius A"); if (!(B>0)) bad.push("cut elbow radius B");
+  if (!(od>0)) bad.push("pipe OD"); if (!(g>=0)) bad.push("weld gap g (0 or more)");
+  if (S.mode==="angle" && !(S.drop>0)) bad.push("desired drop");
+  if (S.mode==="drop" && !(S.ang>=1 && S.ang<=90)) bad.push("angle between 1° and 90°");
+  renderTable(NaN);
+  if (bad.length){ clearOut(); msg("hMsg","bad","Enter a valid "+bad.join(", ")+"."); return; }
+
+  let deg, sol=null;
+  if (S.mode==="angle"){
+    sol = solveAngle(A,B,g,S.drop);
+    if (sol.err){
+      clearOut();
+      msg("hMsg","bad", sol.err==="low"
+        ? "A drop of "+fmtPlain(S.drop)+" needs a roll of less than 1°. Smallest drop in the supported range (θ = 1°) is "+fmtPlain(sol.dmin)+"."
+        : "A drop of "+fmtPlain(S.drop)+" is more than this pair can make. At θ = 90° the maximum drop is A + B + g = "+fmtPlain(sol.dmax)+". Add straight pipe or use larger-radius fittings.");
+      return;
+    }
+    deg = sol.deg;
+  } else deg = S.ang;
+
+  const G = geom(A,B,g,deg), M = arcs(B,od,deg);
+  $("hRoll").textContent = deg.toFixed(4)+"°"; $("hRollDms").textContent = dms(deg);
+  $("hCut").textContent = deg.toFixed(4)+"°"; $("hCutDms").textContent = dms(deg)+" · discard "+(90-deg).toFixed(4)+"°";
+  $("hNote").textContent = "Roll the full 90’s outlet "+deg.toFixed(2)+"° below level, then weld the "+deg.toFixed(2)+"° cut-down elbow directly to it to bring the outlet back level.";
+  set("rD",G.D); set("rT",G.t); set("rL",G.L); set("rH",G.H);
+  $("rA").textContent = fmt(A) + (g>0 ? " + "+fmt(g) : ""); $("rAs").textContent = fmtSub(A);
+  set("mIn",M.inner); set("mOut",M.outer); set("mCl",M.center); set("mRi",M.ri); set("mRo",M.ro);
+  if (M.ri <= 0) msg("markMsg","warn","Cut elbow radius B is not larger than OD/2, so there is no real throat — check B and OD.");
+  else msg("markMsg");
+  renderDiagram(A,B,g,od,G);
+  renderSteps(A,B,g,od,G,M,sol);
+  renderTable(deg);
+}
+
+function renderSteps(A,B,g,od,G,M,sol){
+  const L = [], f = fmtPlain, d = G.deg;
+  L.push("Inputs: A = "+f(A)+", B = "+f(B)+", g = "+f(g)+", OD = "+f(od)+".");
+  if (sol){
+    L.push("Achievable drop over 1°–90°: "+f(sol.dmin)+" to "+f(sol.dmax)+" (max = A + B + g). Target "+f(S.drop)+" is in range.");
+    L.push("Solve <b>D = [A + B·tan(θ/2) + g]·sin θ</b> for θ by bisection on [1°, 90°] → θ = <b>"+d.toFixed(6)+"°</b> ("+sol.it+" iterations).");
+  } else L.push("Angle entered: θ = <b>"+d.toFixed(6)+"°</b>.");
+  L.push("Radians: θ = "+d.toFixed(6)+" × π/180 = "+G.rad.toFixed(8)+" rad.");
+  L.push("Cut elbow takeoff: <code>t = B × tan(θ/2) = "+f(B)+" × tan("+(d/2).toFixed(6)+"°) = "+f(G.t)+"</code>");
+  L.push("Travel: <code>L = A + t + g = "+f(A)+" + "+f(G.t)+" + "+f(g)+" = "+f(G.L)+"</code>");
+  L.push("Drop: <code>D = L × sin θ = "+f(G.L)+" × "+Math.sin(G.rad).toFixed(8)+" = "+f(G.D)+"</code>");
+  L.push("Horizontal projection: <code>H = L × cos θ = "+f(G.L)+" × "+Math.cos(G.rad).toFixed(8)+" = "+f(G.H)+"</code>");
+  L.push("Cut elbow radii: inside <code>B − OD/2 = "+f(M.ri)+"</code>, outside <code>B + OD/2 = "+f(M.ro)+"</code>");
+  L.push("Arc marks from the retained face: throat <code>"+f(M.ri)+" × "+G.rad.toFixed(6)+" = "+f(M.inner)+"</code> centerline <code>"+f(B)+" × "+G.rad.toFixed(6)+" = "+f(M.center)+"</code> heel <code>"+f(M.ro)+" × "+G.rad.toFixed(6)+" = "+f(M.outer)+"</code>");
+  if (sol && Math.abs(A-B)<1e-9 && g===0){
+    const sc = shortcut(A,S.drop), ok = Math.abs(sc-d) < 1e-6;
+    L.push("Check (A = B = R, g = 0): <code>θ = 45° − asin[(R − D)/(R√2)] = 45° − asin("+((A-S.drop)/(A*Math.SQRT2)).toFixed(8)+") = "+sc.toFixed(6)+"°</code> <span class=\""+(ok?"ok":"")+"\">"+(ok?"✓ matches":"✗ differs")+"</span>");
+  }
+  $("steps").innerHTML = L.map(s=>"<li>"+s+"</li>").join("");
+}
+
+let lastTblKey = "";
+function renderTable(deg){
+  const key = [S.A,S.B,S.g,S.unit,S.fmt].join("|");
+  const tb = $("tbody");
+  if (key !== lastTblKey){
+    lastTblKey = key;
+    if (!(S.A>0 && S.B>0 && S.g>=0)){ tb.innerHTML=""; return; }
+    let h = "";
+    for (let a=1;a<=90;a++){ const G=geom(S.A,S.B,S.g,a); h += "<tr data-a='"+a+"'><td>"+a+"</td><td>"+fmtTbl(G.D)+"</td><td>"+fmtTbl(G.t)+"</td><td>"+fmtTbl(G.L)+"</td></tr>"; }
+    tb.innerHTML = h;
+  }
+  tb.querySelectorAll("tr.hl").forEach(r=>r.classList.remove("hl"));
+  if (isFinite(deg)){ const r = tb.querySelector("tr[data-a='"+Math.min(90,Math.max(1,Math.round(deg)))+"']"); r && r.classList.add("hl"); }
+}
+
+function renderDiagram(A,B,g,od,G){
+  const c = Math.cos(G.rad), s = Math.sin(G.rad), t = G.t, L = G.L;
+  // model coords: x right, y down (inches). PI1 at origin.
+  const PI2 = [L*c, L*s], W = [A*c, A*s], Sx = [(A+g)*c, (A+g)*s];
+  const C = [Sx[0]+B*s, Sx[1]-B*c], E = [C[0], C[1]+B];
+  const ext = Math.max(0.35*L, 1.2*t, od);
+  const endX = E[0] + ext;
+  const W0=360, ml=34, mr=62, mt=46, mb=56;
+  const minX=-od/2, maxX=endX, minY=-od/2, maxY=PI2[1]+od/2;
+  const sc = Math.min((W0-ml-mr)/(maxX-minX), 230/Math.max(maxY-minY, 1e-9));
+  const usedH = (maxY-minY)*sc, H0 = Math.max(170, usedH+mt+mb), oy = mt + ((H0-mt-mb)-usedH)/2;
+  const X = x => ml + (x-minX)*sc, Y = y => oy + (y-minY)*sc;
+  const P = p => X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1);
+  const pw = Math.max(5, Math.min(26, od*sc));
+  const txt = (x,y,str,o={}) => `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${o.fs||11}" font-weight="${o.fw||700}" fill="${o.fill||"var(--ink)"}" text-anchor="${o.a||"middle"}" ${o.rot!=null?`transform="rotate(${o.rot} ${x.toFixed(1)} ${y.toFixed(1)})"`:""} stroke="var(--halo)" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round">${str}</text>`;
+  const arrow = (x1,y1,x2,y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--muted)" stroke-width="1.2" marker-start="url(#ah)" marker-end="url(#ah)"/>`;
+  let h = `<svg viewBox="0 0 ${W0} ${H0}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rolled 90 and cut-down elbow layout">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="var(--muted)"/></marker></defs>`;
+  const y0 = Y(0), y2 = Y(PI2[1]), xR = X(endX)+18;
+  // level reference & outlet level extension
+  h += `<line x1="${X(0)}" y1="${y0}" x2="${xR}" y2="${y0}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="2 4"/>`;
+  h += `<line x1="${X(endX)}" y1="${y2}" x2="${xR}" y2="${y2}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="2 4"/>`;
+  // pipe bodies
+  h += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(W[0])}" y2="${Y(W[1])}" stroke="var(--a90)" stroke-width="${pw}" stroke-opacity=".35"/>`;
+  const R = B*sc;
+  h += `<path d="M${P(Sx)} A${R.toFixed(1)},${R.toFixed(1)} 0 0 0 ${P(E)}" fill="none" stroke="var(--corr)" stroke-width="${pw}" stroke-opacity=".35"/>`;
+  h += `<line x1="${X(E[0])}" y1="${Y(E[1])}" x2="${X(endX)}" y2="${Y(E[1])}" stroke="var(--outlet)" stroke-width="${pw}" stroke-opacity=".35"/>`;
+  h += `<circle cx="${X(0)}" cy="${Y(0)}" r="${(pw/2).toFixed(1)}" fill="var(--a90)" fill-opacity=".35" stroke="var(--a90)" stroke-width="1.5"/>`;
+  // centerlines
+  h += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(W[0])}" y2="${Y(W[1])}" stroke="var(--a90)" stroke-width="2.5"/>`;
+  h += `<path d="M${P(Sx)} A${R.toFixed(1)},${R.toFixed(1)} 0 0 0 ${P(E)}" fill="none" stroke="var(--corr)" stroke-width="2.5"/>`;
+  h += `<line x1="${X(E[0])}" y1="${Y(E[1])}" x2="${X(endX)}" y2="${Y(E[1])}" stroke="var(--outlet)" stroke-width="2.5"/>`;
+  // theoretical travel & tangent
+  h += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(PI2[0])}" y2="${Y(PI2[1])}" stroke="var(--ink)" stroke-width="1.1" stroke-dasharray="5 4"/>`;
+  h += `<line x1="${X(PI2[0])}" y1="${Y(PI2[1])}" x2="${X(E[0])}" y2="${Y(E[1])}" stroke="var(--ink)" stroke-width="1.1" stroke-dasharray="5 4"/>`;
+  h += `<circle cx="${X(0)}" cy="${Y(0)}" r="3" fill="var(--ink)"/><circle cx="${X(PI2[0])}" cy="${Y(PI2[1])}" r="3" fill="var(--ink)"/>`;
+  // weld tick
+  const nx=-s, ny=c, tk = pw/2+5;
+  h += `<line x1="${X(W[0])+nx*tk}" y1="${Y(W[1])+ny*tk}" x2="${X(W[0])-nx*tk}" y2="${Y(W[1])-ny*tk}" stroke="var(--ink)" stroke-width="2.5"/>`;
+  // numbered callouts (key below the diagram)
+  const cal=(x,y,n,col)=>`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="${col}" stroke="var(--halo)" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" font-size="11" font-weight="800" fill="#fff" text-anchor="middle">${n}</text>`;
+  h += txt(X(0)-4, Y(0)-pw/2-8, "INLET (end view) · PI₁", {a:"start"});
+  h += txt(X(PI2[0])-4, Y(PI2[1])+pw/2+14, "PI₂", {a:"end", fs:10});
+  const am = G.rad/2, AM = [C[0]-B*Math.sin(G.rad-am), C[1]+B*Math.cos(G.rad-am)];
+  h += cal(X(W[0]*0.5), Y(W[1]*0.5), 1, "var(--a90)");
+  h += cal(X(W[0])-nx*(tk+10), Y(W[1])-ny*(tk+10), 2, "#555b63");
+  h += cal(X(AM[0]), Y(AM[1]), 3, "var(--corr)");
+  h += cal((X(E[0])+X(endX))/2, Y(E[1]), 4, "var(--outlet)");
+  // travel label below line
+  const tm = [PI2[0]*0.42, PI2[1]*0.42], off = pw/2+8;
+  h += txt(X(tm[0])+nx*off, Y(tm[1])+ny*off, "TRAVEL L = "+fmt(L), {rot: G.deg, fs:10.5});
+  // θ arc at PI1
+  const ra = Math.min(34, Math.max(18, X(PI2[0])-X(0)>60?30:20));
+  h += `<path d="M${X(0)+ra},${Y(0)} A${ra},${ra} 0 0 1 ${(X(0)+ra*c).toFixed(1)},${(Y(0)+ra*s).toFixed(1)}" fill="none" stroke="var(--muted)" stroke-width="1.2"/>`;
+  h += txt(X(0)+ra*Math.cos(G.rad/2)+9, Y(0)+ra*Math.sin(G.rad/2)+4, "θ", {fs:12, a:"start"});
+  // drop dimension
+  h += arrow(xR-6, y0, xR-6, y2);
+  h += txt(xR-2, (y0+y2)/2-6, "DROP", {a:"start", fs:10});
+  h += txt(xR-2, (y0+y2)/2+8, fmt(G.D), {a:"start", fs:10});
+  // horizontal projection
+  const yb = Math.max(y2, Y(E[1])) + pw/2 + 22;
+  h += `<line x1="${X(0)}" y1="${y0+pw/2+3}" x2="${X(0)}" y2="${yb+5}" stroke="var(--muted)" stroke-width=".8"/>`;
+  h += `<line x1="${X(PI2[0])}" y1="${y2+3}" x2="${X(PI2[0])}" y2="${yb+5}" stroke="var(--muted)" stroke-width=".8"/>`;
+  const span = X(PI2[0])-X(0);
+  if (span > 6) h += arrow(X(0), yb, X(PI2[0]), yb);
+  h += span > 130 ? txt((X(0)+X(PI2[0]))/2, yb+15, "HORIZ. PROJ. = "+fmt(G.H), {fs:10})
+                  : txt(X(0)-6, yb+15, "HORIZ. PROJ. = "+fmt(G.H), {fs:10, a:"start"});
+  h += `</svg>`;
+  $("diagram").innerHTML = h;
+}
+
+syncUI(); calc();
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
