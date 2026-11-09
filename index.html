@@ -17,14 +17,14 @@
   --bg:#eceeed; --card:#ffffff; --ink:#100f0d; --muted:#5a6160; --line:#d3d9d8;
   --accent:#3caaa5; --accent-ink:#100f0d; --a90:#24918c; --corr:#c9781a; --outlet:#6b7473;
   --good:#15803d; --warn:#b45309; --bad:#b91c1c; --hero:#100f0d; --hero-ink:#ffffff;
-  --field:#f7f9f8; --halo:#ffffff; --brand:#100f0d; --teal:#3caaa5;
+  --field:#f7f9f8; --halo:#ffffff; --cut:#b3362b; --brand:#100f0d; --teal:#3caaa5;
 }
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#0a0a09; --card:#171715; --ink:#eceae5; --muted:#9ba3a2; --line:#2c2e2c;
     --accent:#3caaa5; --accent-ink:#100f0d; --a90:#3caaa5; --corr:#f0a742; --outlet:#9aa3a2;
     --good:#4ade80; --warn:#fbbf24; --bad:#f87171; --hero:#100f0d; --hero-ink:#ffffff;
-    --field:#100f0d; --halo:#171715; --brand:#100f0d; --teal:#3caaa5;
+    --field:#100f0d; --halo:#171715; --cut:#f26b5b; --brand:#100f0d; --teal:#3caaa5;
   }
 }
 *{box-sizing:border-box}
@@ -91,6 +91,8 @@ th{position:sticky;top:0;background:var(--card);font-size:12px;color:var(--muted
 th:first-child,td:first-child{text-align:center}
 tr.hl td{background:color-mix(in srgb,var(--accent) 22%,transparent);font-weight:700}
 .ok{color:var(--good);font-weight:700}
+.mark-dia{border:1px solid var(--line);border-radius:12px;padding:6px;margin-bottom:10px;background:var(--card)}
+.mark-dia:empty{display:none}
 footer{color:var(--muted);font-size:12.5px;padding:4px 6px 0}
 .brand{background:var(--brand);border-radius:14px;margin:12px 0;padding:18px 16px 16px;text-align:center}
 .brand .by{color:#9ba3a2;font-size:11.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;margin-bottom:10px}
@@ -182,6 +184,7 @@ header{border-bottom:3px solid var(--teal);margin-bottom:4px}
 
 <section class="card">
   <h2>Cut-down elbow marking (arc lengths)</h2>
+  <div class="mark-dia" id="markDiagram"></div>
   <div class="res marks">
     <div><div class="k">Throat (inside) arc</div><div class="v" id="mIn">—</div><div class="s" id="mIns"></div></div>
     <div><div class="k">Heel (outside) arc</div><div class="v" id="mOut">—</div><div class="s" id="mOuts"></div></div>
@@ -189,7 +192,7 @@ header{border-bottom:3px solid var(--teal);margin-bottom:4px}
     <div><div class="k">Inside radius</div><div class="v" id="mRi" style="color:inherit">—</div><div class="s" id="mRis"></div></div>
     <div><div class="k">Outside radius</div><div class="v" id="mRo" style="color:inherit">—</div><div class="s" id="mRos"></div></div>
   </div>
-  <p class="hint" id="markNote">Measure each arc along the curved surface of the elbow, starting at the face you are keeping. Connect the throat, side and heel marks around the pipe for the cut line.</p>
+  <p class="hint" id="markNote"></p>
   <div id="markMsg"></div>
 </section>
 
@@ -287,7 +290,8 @@ function fmt(v){ // primary display
   if (!isFinite(v)) return "—";
   if (S.unit==="mm") return (v*MM).toFixed(2)+" mm";
   if (S.fmt==="dec") return v.toFixed(4)+"″";
-  return frac(v, +S.fmt);
+  const den=+S.fmt, d=v-Math.round(v*den)/den;
+  return frac(v, den) + (d>1e-6 ? "+" : d<-1e-6 ? "−" : "");
 }
 function fmtSub(v){ // secondary display
   if (!isFinite(v)) return "";
@@ -386,7 +390,7 @@ function set(id,v,sub){ $(id).textContent = fmt(v); $(id+"s").textContent = fmtS
 function clearOut(){
   ["hRoll","hCut"].forEach(i=>$(i).textContent="—"); $("hRollDms").textContent=$("hCutDms").textContent="";
   ["rD","rT","rL","rH","rA","mIn","mOut","mCl","mRi","mRo"].forEach(i=>{ $(i).textContent="—"; $(i+"s").textContent=""; });
-  $("hNote").textContent=""; $("diagram").innerHTML=""; $("steps").innerHTML=""; $("markMsg").innerHTML="";
+  $("hNote").textContent=""; $("diagram").innerHTML=""; $("markDiagram").innerHTML=""; $("markNote").textContent=""; $("steps").innerHTML=""; $("markMsg").innerHTML="";
 }
 function msg(el,cls,html){ $(el).innerHTML = html ? '<div class="msg '+cls+'">'+html+'</div>' : ""; }
 
@@ -422,11 +426,51 @@ function calc(){
   set("rD",G.D); set("rT",G.t); set("rL",G.L); set("rH",G.H);
   $("rA").textContent = fmt(A) + (g>0 ? " + "+fmt(g) : ""); $("rAs").textContent = fmtSub(A);
   set("mIn",M.inner); set("mOut",M.outer); set("mCl",M.center); set("mRi",M.ri); set("mRo",M.ro);
+  renderMarkDiagram(B,od,deg,M);
+  $("markNote").textContent = "Measure along the outside of the elbow from the factory end with a flexible tape: heel on the outside of the bend, sides on the centerline (both sides), throat on the inside. Join the marks with a wrap-around and cut square to the elbow. Keep the "+deg.toFixed(2)+"° piece; the scrap piece is "+(90-deg).toFixed(2)+"°." + (S.unit==="in" && S.fmt!=="dec" ? " A + after a fraction means a hair over; − means a hair under." : "");
   if (M.ri <= 0) msg("markMsg","warn","Cut elbow radius B is not larger than OD/2, so there is no real throat — check B and OD.");
   else msg("markMsg");
   renderDiagram(A,B,g,od,G);
   renderSteps(A,B,g,od,G,M,sol);
   renderTable(deg);
+}
+
+function renderMarkDiagram(B,od,deg,M){
+  const ri=M.ri, ro=M.ro;
+  if (!(ri>0)) { $("markDiagram").innerHTML=""; return; }
+  const W0=360, sc=205/ro;
+  const cx=118, cy=34+ro*sc, H0=Math.ceil(cy+(deg>60?40:14));
+  const pt=(r,phi)=>[cx+r*sc*Math.sin(phi*D2R), cy-r*sc*Math.cos(phi*D2R)];
+  const P=p=>p[0].toFixed(1)+","+p[1].toFixed(1);
+  const arc=(r,a,b,sweep)=>`A${(r*sc).toFixed(1)},${(r*sc).toFixed(1)} 0 0 ${sweep} ${P(pt(r,b))}`;
+  const band=(a,b)=>`M${P(pt(ro,a))} ${arc(ro,a,b,1)} L${P(pt(ri,b))} ${arc(ri,b,a,0)} Z`;
+  const txt=(p,s,o={})=>`<text x="${p[0].toFixed(1)}" y="${p[1].toFixed(1)}" font-size="${o.fs||13}" font-weight="${o.fw||700}" fill="${o.fill||"var(--ink)"}" text-anchor="${o.a||"middle"}" stroke="var(--halo)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${s}</text>`;
+  const scrap=90-deg;
+  let h=`<svg viewBox="0 0 ${W0} ${H0}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Marking the cut on the elbow">`;
+  // scrap and kept pieces
+  h+=`<path d="${band(deg,90)}" fill="color-mix(in srgb, var(--muted) 14%, transparent)" stroke="var(--muted)" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+  h+=`<path d="${band(0,deg)}" fill="color-mix(in srgb, var(--teal) 20%, transparent)" stroke="none"/>`;
+  h+=`<path d="M${P(pt(ro,0))} ${arc(ro,0,deg,1)}" fill="none" stroke="var(--a90)" stroke-width="3.5"/>`;
+  h+=`<path d="M${P(pt(ri,0))} ${arc(ri,0,deg,1)}" fill="none" stroke="var(--a90)" stroke-width="3.5"/>`;
+  // centerline
+  h+=`<path d="M${P(pt(B,0))} ${arc(B,0,90,1)}" fill="none" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="9 4 2 4"/>`;
+  // factory end
+  h+=`<line x1="${pt(ri,0)[0]}" y1="${pt(ri,0)[1]}" x2="${pt(ro,0)[0]}" y2="${pt(ro,0)[1]}" stroke="var(--ink)" stroke-width="5"/>`;
+  // cut line, extended a little past both walls
+  const e=0.12*(ro-ri);
+  const c1=pt(Math.max(0,ri-e),deg), c2=pt(ro+e,deg);
+  h+=`<line x1="${c1[0].toFixed(1)}" y1="${c1[1].toFixed(1)}" x2="${c2[0].toFixed(1)}" y2="${c2[1].toFixed(1)}" stroke="var(--cut)" stroke-width="3.5"/>`;
+  // labels
+  const fe=pt((ri+ro)/2,0);
+  h+=txt([fe[0]-10,fe[1]+4],"factory end",{a:"end",fill:"var(--muted)"});
+  if (deg<22){ const h0=pt(ro,0); h+=txt([h0[0]-8,h0[1]-4],"Heel",{fill:"var(--a90)",a:"end"}); }
+  else { const hm=pt(ro,deg/2); h+=txt([hm[0]+4,hm[1]-9],"Heel",{fill:"var(--a90)",a:"middle"}); }
+  const tm=pt(ri,deg/2); h+=txt([tm[0]-4,tm[1]+19],"Throat",{fill:"var(--a90)",a:"end"});
+  if (deg<=60) h+=txt([c2[0]+6,c2[1]-4],"cut at "+deg.toFixed(2)+"°",{fill:"var(--cut)",a:"start"});
+  else h+=txt([Math.min(c2[0]+4,W0-4),c2[1]+28],"cut at "+deg.toFixed(2)+"°",{fill:"var(--cut)",a:"end"});
+  const sm=pt(B,deg+scrap/2); if (scrap>=12) h+=txt([sm[0],sm[1]],"scrap "+scrap.toFixed(2)+"°",{fs:12,fw:600,fill:"var(--muted)"});
+  h+=`</svg>`;
+  $("markDiagram").innerHTML=h;
 }
 
 function renderSteps(A,B,g,od,G,M,sol){
